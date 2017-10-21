@@ -1,0 +1,227 @@
+timeline controller
+
++++ b/src/app/main/pages/timeline/timeline.controller.js
+@@ -10,7 +10,7 @@
+         .controller('sendSmsController', sendSmsController)
+         .controller('LeftCtrl', LeftCtrl);
+ 
+-    function replyController(FileUploader, $mdDialog, jwtHelper, $scope, $http, $stateParams, localStorageService, SERVICE_API) {
++    function replyController(FileUploader, $mdConstant, $mdDialog, jwtHelper, $scope, $http, $stateParams, localStorageService, SERVICE_API) {
+         var vm = this;
+         vm.Reply = [];
+         vm.Reply = localStorageService.get('getReply');
+@@ -26,15 +26,23 @@
+                 toMail: undefined
+             };*/
+         console.log(toMail);
++
++
++
++
+         vm.details = {
+             from: username.userEmail,
+             to: toMail,
++            cc: undefined,
++            bcc: [],
+             title: undefined,
++            // cc_test: undefined,
+             subject: undefined,
+             type: "reply",
+             files: []
+         };
+ 
++
+         vm.uploader = $scope.uploader = new FileUploader({
+             url: SERVICE_API + '/api/attachments/upload/' + ticketID
+         });
+@@ -77,6 +85,15 @@
+                     console.log(exp);
+                 })
+         }
++        // Use common key codes found in $mdConstant.KEY_CODE...
++        this.bcckeys = [$mdConstant.KEY_CODE.ENTER, $mdConstant.KEY_CODE.COMMA];
++        this.cckeys = [$mdConstant.KEY_CODE.ENTER, $mdConstant.KEY_CODE.COMMA];
++        this.cc = [];
++        this.bcc = [];
++        // Any key code can be used to create a custom separator
++        var semicolon = 186;
++        this.customKeys = [$mdConstant.KEY_CODE.ENTER, $mdConstant.KEY_CODE.COMMA, semicolon];
++        this.contacts = ['test@example.com'];
+     }
+ 
+     function forwardmessageController($mdDialog, jwtHelper, $scope, $http, $stateParams, localStorageService, SERVICE_API) {
+@@ -424,6 +441,7 @@
+             }).then(function(replyData) {
+                 replyData.type = "reply";
+                 console.log(replyData);
++                console.log("cc details", vm.details);
+                 localStorageService.set('toReplyMail', '');
+                 $http.post(SERVICE_API + '/api/ticket/' + ticketID + '/reply', replyData)
+                     .then(
+
+
+
+timeline.html
+
+
+@@ -302,55 +302,68 @@
+ </section>
+ <script type="text/ng-template" id="reply.html">
+     <md-dialog class="compose-dialog" aria-label="New Message">
+-        <form class="md-inline-form" name="reply">
+-            <md-toolbar class="md-accent md-hue-2">
+-                <div class="md-toolbar-tools" layout="row" layout-align="space-between center">
+-                    <span class="title">Reply</span>
+-                    <md-button class="md-icon-button" ng-click="replyCtrl.cancel()" aria-label="Close dialog" tranlate translate-aria-label="MAIL.CLOSE_DIALOG">
+-                        <md-icon md-font-icon="icon-close"></md-icon>
+-                    </md-button>
+-                </div>
+-            </md-toolbar>
+-            <md-dialog-content ms-scroll>
+-                <md-input-container class="md-block">
+-                    <label>From</label>
+-                    <input ng-model="replyCtrl.details.from" type="email" disabled>
+-                </md-input-container>
+-                <md-input-container class="md-block to" ng-class="{'hidden-cc': replyCtrl.hiddenCC, 'hidden-bcc': replyCtrl.hiddenBCC}">
+-                    <label>To</label>
+-                    <input ng-model="replyCtrl.details.to" type="email" md-autofocus required>
+-                    <div class="cc-bcc" layout="row" layout-align="start center">
+-                        <div class="show-cc" ng-model="TimelineCtrl.details.cc" ng-show="replyCtrl.hiddenCC" ng-click="replyCtrl.hiddenCC = false">CC</div>
+-                        <div class="show-bcc" ng-model="TimelineCtrl.details.bcc" ng-show="replyCtrl.hiddenBCC" ng-click="replyCtrl.hiddenBCC = false">BCC</div>
++        <div ng-controller="replyController as ctrl" layout="column" ng-cloak>
++            <form class="md-inline-form" name="reply">
++                <md-toolbar class="md-accent md-hue-2">
++                    <div class="md-toolbar-tools" layout="row" layout-align="space-between center">
++                        <span class="title">Reply</span>
++                        <md-button class="md-icon-button" ng-click="replyCtrl.cancel()" aria-label="Close dialog" tranlate translate-aria-label="MAIL.CLOSE_DIALOG">
++                            <md-icon md-font-icon="icon-close"></md-icon>
++                        </md-button>
+                     </div>
+-                </md-input-container>
+-                <!--  <md-input-container class="md-block" ng-hide="replyCtrl.hiddenCC">
+-                <label>Cc</label>
+-                <input ng-model="replyCtrl.details.cc" type="email">
+-            </md-input-container>
+-            <md-input-container class="md-block" ng-hide="replyCtrl.hiddenBCC">
+-                <label>Bcc</label>
+-                <input ng-model="replyCtrl.details.bcc" type="t">
+-            </md-input-container> -->
+-                <md-input-container class="md-block">
+-                    <label>Subject</label>
+-                    <input ng-model="replyCtrl.details.subject" type="text" required>
+-                </md-input-container>
+-                <text-angular ng-model="replyCtrl.details.title" ta-default-wrap="null" required></text-angular>
+-                <!--Attachments-->
+-                <div class="attachment-list">
+-                    <!--  <div>
++                </md-toolbar>
++                <md-dialog-content ms-scroll>
++                    <md-input-container class="md-block">
++                        <label>From</label>
++                        <input ng-model="replyCtrl.details.from" type="email" disabled>
++                    </md-input-container>
++                    <md-input-container class="md-block to" ng-class="{'hidden-cc': replyCtrl.hiddenCC, 'hidden-bcc': replyCtrl.hiddenBCC}">
++                        <label>To</label>
++                        <input ng-model="replyCtrl.details.to" type="email" md-autofocus required>
++                        <div class="cc-bcc" layout="row" layout-align="start center">
++                            <div class="show-cc" ng-model="replyCtrl.details.cc" ng-show="replyCtrl.hiddenCC" ng-click="replyCtrl.hiddenCC = false">CC</div>
++                            <div class="show-bcc" ng-model="replyCtrl.details.bcc" ng-show="replyCtrl.hiddenBCC" ng-click="replyCtrl.hiddenBCC = false">BCC</div>
++                        </div>
++                    </md-input-container>
++                 <!-- <md-input-container class="md-block">
++    <label>CC</label>
++    <input type="email" class="form-control" ng-model="replyCtrl.details.cc_test">
++</md-input-container>
++ -->
++                    <!-- <md-input-container class="md-block" ng-hide="replyCtrl.hiddenCC">
++                    <label>Cc</label>
++                    <input ng-model="replyCtrl.details.cc" type="email" multiple>
++                </md-input-container> -->
++                    <md-content style="position: relative; top: -28px; left: -16px; width: 695px;" class="md-padding" layout="column">
++                        <md-chips type="email" ng-model="ctrl.cc" md-separator-keys="ctrl.cckeys" placeholder="CC"></md-chips>
++                    </md-content>
++                    <!--  <md-input-container class="md-block" ng-hide="replyCtrl.hiddenBCC">
++                        <label>Bcc</label>
++                        <input ng-model="replyCtrl.details.bcc" type="email" multiple>
++                    </md-input-container> -->
++                    <md-content style="position: relative; top: -40px; left: -16px; width: 695px;" class="md-padding" layout="column">
++                        <md-chips type="email" ng-model="ctrl.bcc" md-separator-keys="ctrl.bcckeys" placeholder="BCC"></md-chips>
++                    </md-content>
++                    test{{replyCtrl.details.cc}}
++                    <md-input-container style="position: relative; top: -31px;" class="md-block">
++                        <label>Subject</label>
++                        <input ng-model="replyCtrl.details.subject" type="text" required>
++                    </md-input-container>
++                    <text-angular ng-model="replyCtrl.details.title" ta-default-wrap="null" required></text-angular>
++                    <!--Attachments-->
++                    <div class="attachment-list">
++                        <!--  <div>
+                         <button type="button" class="btn btn-info btn-s pull-right" ng-click="uploader.uploadAll()" ng-disabled="!uploader.getNotUploadedItems().length" data-toggle="tooltip" title="Upload">
+                             <span class="glyphicon glyphicon-upload"></span>
+                         </button>
+                         <input type="file" class="custom-file-input" nv-file-select="" uploader="uploader" multiple />
+                     </div> -->
+-                    <table>
+-                        <tr ng-repeat="item in uploader.queue">
+-                            <td><strong>{{ item.file.name }}</strong></td>
+-                        </tr>
+-                    </table>
+-                    <!--                     <div class="attachment" layout="row" layout-align="space-between center">
++                        <table>
++                            <tr ng-repeat="item in uploader.queue">
++                                <td><strong>{{ item.file.name }}</strong></td>
++                            </tr>
++                        </table>
++                        <!--                     <div class="attachment" layout="row" layout-align="space-between center">
+                         <div>
+                             <span class="filename">attachment-2.doc</span>
+                             <span class="size">(12 Kb)</span>
+@@ -368,29 +381,30 @@
+                             <md-icon md-font-icon="icon-close" class="s16"></md-icon>
+                         </md-button>
+                     </div> -->
+-                </div>
+-                <!--Attachments-->
+-            </md-dialog-content>
+-            <md-dialog-actions layout="row" layout-align="space-between center">
+-                <md-button class="md-icon-button file-upload fileUpload" uploader="uploader" aria-label="Attach file">
+-                    <input type="file" class="custom-file-input file-input" nv-file-select="" uploader="uploader" multiple>
+-                    <md-icon md-font-icon="icon-paperclip"></md-icon>
+-                    <md-tooltip><span>Attach File</span></md-tooltip>
+-                </md-button>
+-                <span ng-if="uploader.getNotUploadedItems().length > 0" ng-init="uploader.uploadAll()"> </span>
+-                <div layout="row" layout-align="start center">
+-                    <md-button ng-click="replyCtrl.replyMessage(replyCtrl.details)" class="send-button md-accent md-raised" aria-label="Send" translate-attr-aria-label="MAIL.SEND" ng-disabled="reply.$invalid">
+-                        SEND
++                    </div>
++                    <!--Attachments-->
++                </md-dialog-content>
++                <md-dialog-actions layout="row" layout-align="space-between center">
++                    <md-button class="md-icon-button file-upload fileUpload" uploader="uploader" aria-label="Attach file">
++                        <input type="file" class="custom-file-input file-input" nv-file-select="" uploader="uploader" multiple>
++                        <md-icon md-font-icon="icon-paperclip"></md-icon>
++                        <md-tooltip><span>Attach File</span></md-tooltip>
+                     </md-button>
+-                </div>
+-                <!--  <div layout="row">
++                    <span ng-if="uploader.getNotUploadedItems().length > 0" ng-init="uploader.uploadAll()"> </span>
++                    <div layout="row" layout-align="start center">
++                        <md-button ng-click="replyCtrl.replyMessage(replyCtrl.details)" class="send-button md-accent md-raised" aria-label="Send" translate-attr-aria-label="MAIL.SEND" ng-disabled="reply.$invalid">
++                            SEND
++                        </md-button>
++                    </div>
++                    <!--  <div layout="row">
+                 <md-button class="md-icon-button" aria-label="Delete" translate-attr-aria-label="MAIL.DELETE">
+                     <md-icon md-font-icon="icon-delete"></md-icon>
+                     <md-tooltip><span translate="MAIL.DELETE"></span></md-tooltip>
+                 </md-button>
+             </div> -->
+-            </md-dialog-actions>
+-        </form>
++                </md-dialog-actions>
++            </form>
++        </div>
+     </md-dialog>
+ </script>
+
+ 

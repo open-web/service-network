@@ -1,0 +1,4 @@
+Agent ID,Answered Calls,Missed Calls,Incoming Calls,Outgoing Calls,Tickets Closed,Tickets Reopened,Tickets Pending,Total Calls,Total Tickets,SLA,SLA %,created_at,Agent Name
+204,0,0,0,0,0,0,2,0,3,0,0,2017-05-23
+79,0,0,0,0,1,0,0,0,1,1,100,2017-05-25
+204,0,0,0,0,0,0,0,0,1,0,0,2017-05-25

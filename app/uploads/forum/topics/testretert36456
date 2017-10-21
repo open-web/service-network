@@ -1,0 +1,61 @@
+
+
+
+exten => s,n(dial-check),GotoIf($["${TYPE}"="DIAL"]?dailing:hangup)
+exten => s,n(dailing),Set(Dialing_No=${ODBC_MACRO_GETDIALNO()})
+exten => s,n,Set(Dial_Count=${ODBC_MACRO_GET_DIAL_COUNT()})
+exten => s,n,GotoIf($["${Dial_Count}"="1"]?dial_one:second)
+exten => s,n(second),GotoIf($["${Dial_Count}"="2"]?dial_two:third)
+exten => s,n(third),GotoIf($["${Dial_Count}"="3"]?dial_three:fourth)
+exten => s,n(fourth),GotoIf($["${Dial_Count}"="4"]?dial_four:fifth)
+exten => s,n(fifth),GotoIf($["${Dial_Count}"="5"]?dial_five:sixth)
+
+exten => s,n(sixth),GotoIf($["${Dial_Count}"="6"]?dial_six:seven)
+exten => s,n(seven),GotoIf($["${Dial_Count}"="7"]?dial_seven:eight)
+exten => s,n(eight),GotoIf($["${Dial_Count}"="8"]?dial_eight:nine)
+exten => s,n(nine),GotoIf($["${Dial_Count}"="9"]?dial_nine:ten)
+exten => s,n(ten),GotoIf($["${Dial_Count}"="10"]?dial_ten:invalid_dial)
+
+exten => s,n(dial_one),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)})
+exten => s,n(dial_two),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)}&DAHDI/g0/${CUT(Dialing_No,_,2)})
+exten => s,n(dial_three),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)}&DAHDI/g0/${CUT(Dialing_No,_,2)}&DAHDI/g0/${CUT(Dialing_No,_,3)})
+exten => s,n(dial_four),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)}&DAHDI/g0/${CUT(Dialing_No,_,2)}&DAHDI/g0/${CUT(Dialing_No,_,3)}&DAHDI/g0/${CUT(Dialing_No,_,4)})
+exten => s,n(dial_five),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)}&DAHDI/g0/${CUT(Dialing_No,_,2)}&DAHDI/g0/${CUT(Dialing_No,_,3)}&DAHDI/g0/${CUT(Dialing_No,_,4)}&DAHDI/g0/${CUT(Dialing_No,_,5)})
+
+exten => s,n(dial_six),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)}&DAHDI/g0/${CUT(Dialing_No,_,2)}&DAHDI/g0/${CUT(Dialing_No,_,3)}&DAHDI/g0/${CUT(Dialing_No,_,4)}&DAHDI/g0/${CUT(Dialing_No,_,5)}&DAHDI/g0/${CUT(Dialing_No,_,6)})
+exten => s,n(dial_seven),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)}&DAHDI/g0/${CUT(Dialing_No,_,2)}&DAHDI/g0/${CUT(Dialing_No,_,3)}&DAHDI/g0/${CUT(Dialing_No,_,4)}&DAHDI/g0/${CUT(Dialing_No,_,5)}&DAHDI/g0/${CUT(Dialing_No,_,6)}&DAHDI/g0/${CUT(Dialing_No,_,7)})
+exten => s,n(dial_eight),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)}&DAHDI/g0/${CUT(Dialing_No,_,2)}&DAHDI/g0/${CUT(Dialing_No,_,3)}&DAHDI/g0/${CUT(Dialing_No,_,4)}&DAHDI/g0/${CUT(Dialing_No,_,5)}&DAHDI/g0/${CUT(Dialing_No,_,6)}&DAHDI/g0/${CUT(Dialing_No,_,7)}&DAHDI/g0/${CUT(Dialing_No,_,8)})
+exten => s,n(dial_nine),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)}&DAHDI/g0/${CUT(Dialing_No,_,2)}&DAHDI/g0/${CUT(Dialing_No,_,3)}&DAHDI/g0/${CUT(Dialing_No,_,4)}&DAHDI/g0/${CUT(Dialing_No,_,5)}&DAHDI/g0/${CUT(Dialing_No,_,6)}&DAHDI/g0/${CUT(Dialing_No,_,7)}&DAHDI/g0/${CUT(Dialing_No,_,8)}&DAHDI/g0/${CUT(Dialing_No,_,9)})
+exten => s,n(dial_ten),Dial(DAHDI/g0/${CUT(Dialing_No,_,1)}&DAHDI/g0/${CUT(Dialing_No,_,2)}&DAHDI/g0/${CUT(Dialing_No,_,3)}&DAHDI/g0/${CUT(Dialing_No,_,4)}&DAHDI/g0/${CUT(Dialing_No,_,5)}&DAHDI/g0/${CUT(Dialing_No,_,6)}&DAHDI/g0/${CUT(Dialing_No,_,7)}&DAHDI/g0/${CUT(Dialing_No,_,8)}&DAHDI/g0/${CUT(Dialing_No,_,9)}&DAHDI/g0/${CUT(Dialing_No,_,10)})
+
+exten => s,n(invalid_dial),Playback(invalid)
+exten => s,n,Hangup()
+exten => s,n(hangup),Hangup()
+
+
+[STICKY_AGENT]
+dsn=asterisk
+readsql=select IFNULL ((select station from aster_call-log where phone_number = '${CALLER}' order by calldate desc limit 1),'NO')
+
+[GET_EXTEN_STATUS]
+
+
+
+[macro-ext]
+
+exten => s,1,Set(EXTENVAL=${ARG1})
+exten => s,2,Set(CALLER=${ARG2})
+exten => s,3,Set(EXTENVAL=${ODBC_STICKY_AGENT()})
+exten => s,4,GotoIf($[${LEN(${EXTENVAL})}>0]?agent_ok:check_agent)
+exten => s,5(check_agent),GotoIf($["${EXTENVAL}" = "NO" ]?not_called)
+exten => s,6(not_called),Set(EXTENVAL=${ARG1})
+exten => s,7,Goto(agent_ok)
+exten => s,8(agent_ok),CELGenUserEvent(EXTENVAL,${EXTENVAL})
+exten => s,9,Set(EXTENSTATUS=${ODBC_GET_EXTEN_STATUS()})
+exten => s,10,GotoIf($["${EXTENSTATUS}"="READY"]?ready:busy)
+exten => s,11(busy),Hangup()
+exten => s,12,Set(FILENAME=${UNIQUEID}.wav)
+exten => s,13,MixMonitor(/var/spool/asterisk/wav/${STRFTIME(${EPOCH},,%Y-%m-%d)}/${FILENAME})
+exten => s,14,Dial(SIP/${EXTENVAL},30,Tt)
+exten => s,15,Hangup()
+exten => h,1,System(php /usr/share/aster/infoRecord.php ${UNIQUEID})
