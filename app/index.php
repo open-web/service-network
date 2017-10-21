@@ -8,29 +8,10 @@ $app = new Slim\App(['settings' => [
 	'addContentLengthHeader' => false,
 ]]);
 use \Firebase\JWT\JWT;
-require __DIR__ . '/../app/extension.php';
-require __DIR__ . '/../app/login.php';
-require __DIR__ . '/../app/complaint_create.php';
+require __DIR__ . '/../app/user.php';
+require __DIR__ . '/../app/config.php';
 $app->group('/api', function () use ($app) {
 
-	require __DIR__ . '/../app/branch.php';
-	require __DIR__ . '/../app/pauseCode.php';
-	require __DIR__ . '/../app/call_controller.php';
-	require __DIR__ . '/../app/time_condition.php';
-	require __DIR__ . '/../app/line_clear.php';
-	require __DIR__ . '/../app/validate.php';
-	require __DIR__ . '/../app/model.php';
-	require __DIR__ . '/../app/phone.php';
-	require __DIR__ . '/../app/role.php';
-	require __DIR__ . '/../app/complaint.php';
-	require __DIR__ . '/../app/realtime.php';
-	require __DIR__ . '/../app/realtime_model.php';
-	require __DIR__ . '/../app/user.php';
-	require __DIR__ . '/../app/complaint_nature.php';
-	require __DIR__ . '/../app/lines.php';
-	require __DIR__ . '/../app/subdivision.php';
-	require __DIR__ . '/../app/division.php';
-	require __DIR__ . '/../app/report.php';
 })->add(function ($request, $response, $next) {
 	$json = $request->getHeaders();
 	//print_r($json);die;
