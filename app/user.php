@@ -54,4 +54,33 @@ $app->post('/user', function ($request, $response, $args) {
 	echo json_encode(array('status' => 'Success'));
 
 });
+$app->put('/user/{id}', function ($request, $response, $args) {
+	require 'config.php';
+
+	$json = $request->getBody();
+	$post = json_decode($json, true);
+	$tok = $request->getAttribute($tok);
+	$token = json_decode($tok, true);
+	$id = $args['id'];
+	extract($post);
+	$selectUser = "SELECT *FROM tbl_user WHERE id=$id LIMIT 1";
+	$resultSelect = $mysqli->query($selectUser);
+	$resultPass = $resultSelect->fetch_assoc();
+	if ($password != $resultPass['password']) {
+		$password = md5($password);
+	}
+	$insertSql = "UPDATE tbl_user SET firstname='$firstname',lastname='$lastname' ,username='$username'
+	,password='$password',email='$email',age='$age',gender='$gender',status='$status',role_id='$role_id',created_at='$created_at' WHERE id=$id";
+	// echo $insertSql;die;
+	$resultSql = $mysqli->query($insertSql);
+	if ($resultSql) {
+		// $post['id'] = $mysqli->insert_id;
+		return $this->response->withJson(array('user_updated' => $post));
+	} else {
+		return $this->response->withJson(array('error' => 'user not created'));
+	}
+
+	echo json_encode(array('status' => 'Success'));
+
+});
 ?>
